@@ -1,0 +1,2482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍽️ 智能菜单 - 今天吃什么？</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 30%, #ffdede 60%, #e8f5ff 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 可爱的背景装饰 - 更多飘浮元素 */
+        body::before {
+            content: '🌸';
+            position: absolute;
+            top: 50px;
+            left: 30px;
+            font-size: 2rem;
+            opacity: 0.4;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '✨';
+            position: absolute;
+            top: 150px;
+            right: 40px;
+            font-size: 1.5rem;
+            opacity: 0.5;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        /* 额外的飘浮装饰 */
+        .floating-decoration {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.3;
+        }
+
+        .float-1 { top: 10%; left: 5%; font-size: 1.8rem; animation: float 7s ease-in-out infinite; }
+        .float-2 { top: 20%; right: 8%; font-size: 1.5rem; animation: float 9s ease-in-out infinite 1s; }
+        .float-3 { top: 60%; left: 3%; font-size: 2rem; animation: float 8s ease-in-out infinite 2s; }
+        .float-4 { top: 70%; right: 5%; font-size: 1.6rem; animation: float 10s ease-in-out infinite 0.5s; }
+        .float-5 { top: 40%; left: 8%; font-size: 1.3rem; animation: float 11s ease-in-out infinite 1.5s; }
+        .float-6 { bottom: 15%; right: 10%; font-size: 1.7rem; animation: float 7s ease-in-out infinite 2.5s; }
+        .float-7 { bottom: 25%; left: 6%; font-size: 1.4rem; animation: float 9s ease-in-out infinite 3s; }
+        .float-8 { top: 85%; right: 15%; font-size: 1.9rem; animation: float 8s ease-in-out infinite 0.8s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 头部 - 超级可爱风格 */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-family: 'Fredoka One', cursive;
+            font-size: 2.8rem;
+            color: #ff6b6b;
+            text-shadow: 3px 3px 0 #ffe66d, 6px 6px 0 rgba(255,182,193,0.5), 0 0 20px rgba(255,107,107,0.3);
+            margin-bottom: 8px;
+            animation: bounce 2s ease-in-out infinite;
+            position: relative;
+        }
+
+        .header h1::before {
+            content: '💕';
+            position: absolute;
+            top: -10px;
+            right: -20px;
+            font-size: 1.2rem;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .header p {
+            color: #ee5a6f;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* 管理按钮 - 圆润可爱 */
+        .manage-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .manage-button {
+            background: linear-gradient(135deg, #ffdede 0%, #ffb6c1 100%);
+            color: #d97757;
+            font-weight: 700;
+            padding: 12px 24px;
+            border-radius: 30px;
+            border: 4px solid #fff;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-size: 0.95rem;
+            box-shadow: 0 6px 20px rgba(255,182,193,0.5);
+            font-family: 'Nunito', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .manage-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .manage-button.manage-categories {
+            background: linear-gradient(135deg, #e8f5ff 0%, #b8e5ff 100%);
+            color: #7db4d9;
+        }
+
+        .manage-button:hover {
+            transform: translateY(-4px) scale(1.08) rotate(-2deg);
+            box-shadow: 0 10px 30px rgba(255,182,193,0.6);
+        }
+
+        .manage-button:hover::after {
+            content: '💕';
+            position: absolute;
+            top: -8px;
+            right: -5px;
+            font-size: 0.8rem;
+            animation: pop 0.3s ease-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        .manage-button:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        /* 分类筛选 - 胖嘟嘟按钮 */
+        .category-filter {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 10px;
+            justify-content: flex-start;
+            margin-bottom: 30px;
+            padding: 10px 15px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .category-filter::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .category-filter::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.3);
+            border-radius: 8px;
+        }
+
+        .category-filter::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            border-radius: 8px;
+        }
+
+        .category-pill {
+            padding: 12px 20px;
+            border-radius: 30px;
+            border: 3px solid #fff;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,240,245,0.95) 100%);
+            color: #ee5a6f;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 15px rgba(255,182,193,0.25);
+            font-family: 'Nunito', sans-serif;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .category-pill::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,182,193,0.4) 0%, rgba(255,218,224,0.4) 100%);
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+
+        .category-pill:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .category-pill:hover {
+            transform: translateY(-3px) scale(1.05) rotate(2deg);
+            box-shadow: 0 8px 25px rgba(255,182,193,0.4);
+            border-color: #ffb6c1;
+        }
+
+        .category-pill.active {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #ffdede 100%);
+            color: white;
+            border-color: #fff;
+            box-shadow: 0 8px 25px rgba(255,154,158,0.5);
+            transform: scale(1.1);
+            animation: wiggle 0.5s ease-in-out;
+        }
+
+        .category-pill.active::after {
+            content: '💕';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.7rem;
+        }
+
+        .category-pill span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 智能推荐提示 */
+        .smart-recommend {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .smart-recommend-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #ffdede 0%, #ffb6c1 50%, #ffeaa7 100%);
+            color: #d97757;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border: 4px solid #fff;
+            box-shadow: 0 6px 20px rgba(255,154,158,0.3);
+            animation: pulse 2.5s ease-in-out infinite;
+            position: relative;
+        }
+
+        .smart-recommend-badge::after {
+            content: '💕';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.8rem;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        /* 转盘容器 */
+        .wheel-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+        }
+
+        @media (min-width: 480px) {
+            .wheel-container {
+                width: 380px;
+                height: 380px;
+            }
+        }
+
+        /* 指针 - 可爱箭头 */
+        .pointer {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            width: 0;
+            height: 0;
+            border-left: 28px solid transparent;
+            border-right: 28px solid transparent;
+            border-top: 45px solid #ff9a9e;
+            filter: drop-shadow(0 6px 12px rgba(255,154,158,0.5));
+            animation: wiggle 2.5s ease-in-out infinite;
+        }
+
+        .pointer::after {
+            content: '💕';
+            position: absolute;
+            top: -55px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1rem;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: translateX(-50%) rotate(0deg); }
+            25% { transform: translateX(-50%) rotate(-3deg); }
+            75% { transform: translateX(-50%) rotate(3deg); }
+        }
+
+        /* 转盘 */
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 20px 60px rgba(255,182,193,0.3),
+                        0 0 0 8px rgba(255,255,255,0.5),
+                        inset 0 0 40px rgba(255, 255, 255, 0.5);
+            border: 10px solid #fff;
+            transition: transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            position: relative;
+        }
+
+        .wheel::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 90%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,240,245,0.2) 70%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .wheel::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 95%;
+            height: 95%;
+            border-radius: 50%;
+            border: 3px dashed rgba(255,182,193,0.3);
+            pointer-events: none;
+        }
+
+        /* 中心圆 */
+        .center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85px;
+            height: 85px;
+            background: linear-gradient(135deg, #ffdede 0%, #ffb6c1 50%, #ffecd2 100%);
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(255,182,193,0.5),
+                        0 0 0 5px rgba(255,255,255,0.8),
+                        inset 0 -4px 15px rgba(255,130,150,0.2),
+                        inset 0 4px 15px rgba(255,255,255,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid #fff;
+            animation: pulse-glow 2s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+
+        .center-circle.has-result {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #ffdede 0%, #ffb6c1 50%, #ffecd2 100%);
+        }
+
+        .center-circle-emoji {
+            font-size: 2.3rem;
+            transition: all 0.3s ease;
+        }
+
+        .center-circle.has-result .center-circle-emoji {
+            font-size: 1.8rem;
+            margin-bottom: 2px;
+        }
+
+        .center-circle-text {
+            font-size: 0;
+            font-weight: 700;
+            color: #d97757;
+            text-align: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .center-circle.has-result .center-circle-text {
+            font-size: 0.75rem;
+            opacity: 1;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 10px 30px rgba(255,182,193,0.5), 0 0 0 5px rgba(255,255,255,0.8), inset 0 -4px 15px rgba(255,130,150,0.2), inset 0 4px 15px rgba(255,255,255,0.5); }
+            50% { box-shadow: 0 10px 40px rgba(255,182,193,0.7), 0 0 0 8px rgba(255,255,255,0.9), inset 0 -4px 15px rgba(255,130,150,0.2), inset 0 4px 15px rgba(255,255,255,0.5); }
+        }
+
+        /* 开始按钮 - 超级可爱 */
+        .spin-button {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 35%, #ffdede 100%);
+            color: white;
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.4rem;
+            padding: 20px 55px;
+            border-radius: 50px;
+            border: 5px solid #fff;
+            box-shadow: 0 12px 35px rgba(255,154,158,0.5),
+                        0 0 0 3px rgba(255,182,193,0.3),
+                        inset 0 -4px 15px rgba(255,100,120,0.2),
+                        inset 0 4px 15px rgba(255,255,255,0.4);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            text-shadow: 2px 2px 0 rgba(255,100,120,0.3);
+        }
+
+        .spin-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        .spin-button::after {
+            content: '💖';
+            position: absolute;
+            top: -5px;
+            right: 10px;
+            font-size: 1rem;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            50%, 100% { left: 100%; }
+        }
+
+        .spin-button:hover:not(:disabled) {
+            transform: translateY(-5px) scale(1.1) rotate(-2deg);
+            box-shadow: 0 18px 50px rgba(255,154,158,0.6),
+                        0 0 0 5px rgba(255,182,193,0.4),
+                        inset 0 -4px 15px rgba(255,100,120,0.2),
+                        inset 0 4px 15px rgba(255,255,255,0.4);
+        }
+
+        .spin-button:active:not(:disabled) {
+            transform: translateY(-2px) scale(1.02) rotate(0deg);
+            box-shadow: 0 8px 25px rgba(255,154,158,0.5);
+        }
+
+        .spin-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            filter: grayscale(0.3);
+        }
+
+        /* 结果弹窗 */
+        .result-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .result-overlay.show {
+            display: flex;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #ffdede 0%, #ffb6c1 30%, #ffecd2 70%, #ffeaa7 100%);
+            border-radius: 45px;
+            padding: 50px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 6px solid #fff;
+            box-shadow: 0 30px 100px rgba(255,154,158,0.4),
+                        0 0 0 10px rgba(255,182,193,0.2);
+            position: relative;
+        }
+
+        .result-card::before {
+            content: '🎉';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3rem;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.2));
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        .result-card::after {
+            content: '💕';
+            position: absolute;
+            bottom: -15px;
+            right: -10px;
+            font-size: 2rem;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.5) rotate(-10deg);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .result-emoji {
+            font-size: 8rem;
+            margin-bottom: 25px;
+            animation: bounce 1.2s ease-in-out infinite;
+            filter: drop-shadow(0 8px 20px rgba(255,100,120,0.3));
+            position: relative;
+        }
+
+        .result-emoji::before {
+            content: '💕';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            font-size: 1.5rem;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        .result-emoji::after {
+            content: '💕';
+            position: absolute;
+            bottom: -5px;
+            right: -10px;
+            font-size: 1.5rem;
+            animation: float 2s ease-in-out infinite 1s;
+        }
+
+        .result-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            font-size: 1.5rem;
+            color: #ff9a9e;
+            font-family: 'Fredoka One', cursive;
+            text-shadow: 2px 2px 0 rgba(255,255,255,0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .result-name {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #ff6b9d;
+            margin-bottom: 35px;
+            font-family: 'Fredoka One', cursive;
+            text-shadow: 3px 3px 0 #ffe66d, 5px 5px 0 rgba(255,255,255,0.5);
+            animation: wiggle 1s ease-in-out infinite;
+            position: relative;
+            text-align: center;
+        }
+
+        .result-name::before {
+            content: '✨';
+            position: absolute;
+            top: -15px;
+            left: -20px;
+            font-size: 1.5rem;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        .result-name::after {
+            content: '✨';
+            position: absolute;
+            top: -15px;
+            right: -20px;
+            font-size: 1.5rem;
+            animation: sparkle 2s ease-in-out infinite 1s;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .reset-button {
+            width: 100%;
+            background: linear-gradient(135deg, #e8f5ff 0%, #b8e5ff 50%, #a8e6cf 100%);
+            color: #577d86;
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.25rem;
+            padding: 18px;
+            border-radius: 50px;
+            border: 4px solid #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 10px 30px rgba(168, 230, 207, 0.5);
+            position: relative;
+        }
+
+        .reset-button::after {
+            content: '💕';
+            position: absolute;
+            right: 20px;
+            font-size: 1rem;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        .reset-button:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 15px 40px rgba(168, 230, 207, 0.6);
+        }
+
+        /* 管理弹窗 */
+        .manage-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .manage-overlay.show {
+            display: block;
+        }
+
+        .manage-card {
+            background: linear-gradient(135deg, #ffdede 0%, #ffe8f0 40%, #ffecd2 80%, #ffeaa7 100%);
+            border-radius: 40px;
+            padding: 38px;
+            max-width: 580px;
+            width: 100%;
+            margin: 40px auto;
+            animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 5px solid #fff;
+            box-shadow: 0 25px 80px rgba(255,154,158,0.3),
+                        0 0 0 8px rgba(255,182,193,0.15);
+            position: relative;
+        }
+
+        .manage-card::before {
+            content: '💕';
+            position: absolute;
+            top: -15px;
+            right: 20px;
+            font-size: 1.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .manage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .manage-header h2 {
+            font-size: 2rem;
+            color: #d97757;
+            font-family: 'Fredoka One', cursive;
+            text-shadow: 2px 2px 0 #ffe66d;
+        }
+
+        .close-button {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            border: 3px solid #fff;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.8rem;
+            color: white;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 6px 20px rgba(255,154,158,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .close-button::before {
+            content: '💕';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 0.7rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .close-button:hover {
+            transform: rotate(90deg) scale(1.15);
+            box-shadow: 0 8px 25px rgba(255,154,158,0.5);
+        }
+
+        .close-button:hover::before {
+            opacity: 1;
+        }
+
+        /* 添加表单 */
+        .add-form {
+            background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,240,245,0.8) 100%);
+            padding: 28px;
+            border-radius: 30px;
+            margin-bottom: 30px;
+            border: 4px solid #fff;
+            box-shadow: 0 6px 20px rgba(255,182,193,0.15);
+            position: relative;
+        }
+
+        .add-form::before {
+            content: '💕';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.2rem;
+            opacity: 0.5;
+        }
+
+        .category-management .add-form {
+            background: linear-gradient(135deg, rgba(255,240,245,0.7) 0%, rgba(255,218,224,0.7) 100%);
+        }
+
+        .add-form h3 {
+            font-size: 1.35rem;
+            color: #ff9a9e;
+            margin-bottom: 22px;
+            font-family: 'Fredoka One', cursive;
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .form-input {
+            flex: 1;
+            padding: 16px 22px;
+            border: 3px solid #fff;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,240,245,0.95) 100%);
+            color: #577d86;
+            box-shadow: inset 0 2px 8px rgba(255,182,193,0.1),
+                        0 4px 15px rgba(255,182,193,0.15);
+        }
+
+        .form-input:focus {
+            border-color: #ffb6c1;
+            box-shadow: 0 0 0 4px rgba(255,182,193,0.2),
+                        inset 0 2px 8px rgba(255,182,193,0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-input::placeholder {
+            color: #ffb6c1;
+        }
+
+        .form-select {
+            padding: 16px 22px;
+            border: 3px solid #fff;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,240,245,0.95) 100%);
+            cursor: pointer;
+            flex: 1;
+            font-family: 'Nunito', sans-serif;
+            color: #577d86;
+            box-shadow: inset 0 2px 8px rgba(255,182,193,0.1),
+                        0 4px 15px rgba(255,182,193,0.15);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .form-select:focus {
+            border-color: #ffb6c1;
+            box-shadow: 0 0 0 4px rgba(255,182,193,0.2),
+                        inset 0 2px 8px rgba(255,182,193,0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-select:hover {
+            border-color: #ffd1dc;
+        }
+
+        .emoji-picker {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,240,245,0.6) 100%);
+            border-radius: 25px;
+            border: 3px solid #fff;
+            box-shadow: inset 0 2px 10px rgba(255,182,193,0.1);
+        }
+
+        .emoji-picker::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .emoji-picker::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+        }
+
+        .emoji-picker::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            border-radius: 10px;
+        }
+
+        .emoji-option {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.7rem;
+            background: rgba(255,255,255,0.9);
+            border: 3px solid #fff;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .emoji-option:hover {
+            transform: scale(1.15) rotate(5deg);
+            background: #fff;
+        }
+
+        .emoji-option.selected {
+            background: linear-gradient(135deg, #ffdede 0%, #ffb6c1 100%);
+            border-color: #ff9a9e;
+            transform: scale(1.1);
+        }
+
+        .add-button {
+            width: 100%;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #ffdede 100%);
+            color: white;
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.1rem;
+            padding: 16px;
+            border-radius: 30px;
+            border: 4px solid #fff;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 25px rgba(255,154,158,0.4);
+            text-shadow: 1px 1px 0 rgba(255,100,120,0.3);
+            position: relative;
+        }
+
+        .add-button::after {
+            content: '💖';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+        }
+
+        .add-button:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 12px 35px rgba(255,154,158,0.5);
+        }
+
+        /* 列表样式 */
+        .items-section, .category-management {
+            margin-top: 30px;
+        }
+
+        .items-header, .category-management h3 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .items-header h3 {
+            font-size: 1.3rem;
+            color: #d97757;
+            font-family: 'Fredoka One', cursive;
+        }
+
+        .category-management h3 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #9d174d;
+            font-family: 'Fredoka One', cursive;
+        }
+
+        .items-count {
+            background: linear-gradient(135deg, #ffeaa7 0%, #dfe6e9 100%);
+            color: #d97757;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 3px solid #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .category-tab {
+            padding: 11px 20px;
+            border-radius: 28px;
+            border: 3px solid #fff;
+            background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,240,245,0.8) 100%);
+            color: #ee5a6f;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: 'Nunito', sans-serif;
+            box-shadow: 0 3px 10px rgba(255,182,193,0.15);
+        }
+
+        .category-tab:hover {
+            background: #fff;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 5px 15px rgba(255,182,193,0.25);
+        }
+
+        .category-tab.active {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: white;
+            transform: scale(1.08);
+            box-shadow: 0 6px 18px rgba(255,154,158,0.4);
+        }
+
+        .items-list, .category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .item-row, .category-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,240,245,0.85) 100%);
+            padding: 16px 20px;
+            border-radius: 25px;
+            border: 3px solid #fff;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 15px rgba(255,182,193,0.12);
+        }
+
+        .item-row:hover, .category-item:hover {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,240,245,0.95) 100%);
+            transform: translateX(8px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(255,182,193,0.25);
+        }
+
+        .item-row.is-custom {
+            background: linear-gradient(135deg, rgba(255, 230, 109, 0.2) 0%, rgba(254, 218, 119, 0.2) 100%);
+        }
+
+        .item-row.is-deleted {
+            opacity: 0.5;
+        }
+
+        .item-info, .category-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+
+        .item-emoji, .category-emoji {
+            font-size: 2rem;
+        }
+
+        .item-details, .category-name {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .item-name, .category-name {
+            font-weight: 700;
+            color: #577d86;
+            font-size: 1rem;
+        }
+
+        .item-name.is-deleted {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .item-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+        }
+
+        .item-category, .category-badge {
+            padding: 5px 10px;
+            background: linear-gradient(135deg, #ffeaa7 0%, #dfe6e9 100%);
+            border-radius: 12px;
+            color: #d97757;
+            font-weight: 600;
+        }
+
+        .item-badge {
+            padding: 5px 10px;
+            background: linear-gradient(135deg, #ffe66d 0%, #ffecd2 100%);
+            border-radius: 12px;
+            color: #d97757;
+            font-weight: 600;
+        }
+
+        .item-actions, .category-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-button, .rename-button, .delete-button, .restore-button {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,240,245,0.9) 100%);
+            border: 3px solid #fff;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 10px rgba(255,182,193,0.2);
+        }
+
+        .icon-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 15px;
+            color: #577d86;
+        }
+
+        .rename-button {
+            width: 42px;
+            height: 42px;
+            border-radius: 15px;
+            color: #7dd3fc;
+        }
+
+        .delete-button {
+            width: 42px;
+            height: 42px;
+            border-radius: 15px;
+            color: #ff6b9d;
+        }
+
+        .restore-button {
+            background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%);
+            color: #577d86;
+            padding: 10px 18px;
+            border-radius: 18px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border: 3px solid #fff;
+        }
+
+        .icon-button:hover, .rename-button:hover, .delete-button:hover {
+            transform: scale(1.2) rotate(8deg);
+            box-shadow: 0 5px 15px rgba(255,182,193,0.35);
+        }
+
+        .icon-button:hover::after {
+            content: '💕';
+            position: absolute;
+            font-size: 0.6rem;
+            top: -3px;
+            right: -3px;
+        }
+
+        .delete-button:hover {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: white;
+            box-shadow: 0 5px 18px rgba(255,100,120,0.4);
+        }
+
+        .delete-button:hover::after {
+            content: '';
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 45px;
+            color: #ff9a9e;
+        }
+
+        .empty-state-icon {
+            font-size: 4.5rem;
+            margin-bottom: 18px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 4px 10px rgba(255,154,158,0.3));
+        }
+
+        .empty-state-text {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #ff9a9e;
+        }
+
+        .empty-state-text::after {
+            content: ' ~';
+            animation: wiggle 2s ease-in-out infinite;
+        }
+
+        /* 编辑弹窗 */
+        .edit-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 20px;
+        }
+
+        .edit-overlay.show {
+            display: flex;
+        }
+
+        .edit-card {
+            background: linear-gradient(135deg, #ffdede 0%, #ffb6c1 40%, #ffecd2 100%);
+            border-radius: 35px;
+            padding: 35px;
+            max-width: 400px;
+            width: 100%;
+            border: 5px solid #fff;
+            box-shadow: 0 25px 80px rgba(255,154,158,0.3);
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .edit-card h3 {
+            font-size: 1.6rem;
+            color: #ff9a9e;
+            margin-bottom: 22px;
+            text-align: center;
+            font-family: 'Fredoka One', cursive;
+            text-shadow: 2px 2px 0 rgba(255,255,255,0.5);
+        }
+
+        .edit-input {
+            width: 100%;
+            padding: 16px 22px;
+            border: 3px solid #fff;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            outline: none;
+            margin-bottom: 22px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,240,245,0.95) 100%);
+            color: #577d86;
+            font-family: 'Nunito', sans-serif;
+            box-shadow: inset 0 2px 8px rgba(255,182,193,0.1),
+                        0 4px 15px rgba(255,182,193,0.15);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .edit-input:focus {
+            border-color: #ffb6c1;
+            box-shadow: 0 0 0 4px rgba(255,182,193,0.2),
+                        inset 0 2px 8px rgba(255,182,193,0.1);
+            transform: translateY(-2px);
+        }
+
+        .edit-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .edit-actions button {
+            flex: 1;
+            padding: 15px;
+            border-radius: 25px;
+            border: 3px solid #fff;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .edit-confirm {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255,154,158,0.3);
+        }
+
+        .edit-cancel {
+            background: linear-gradient(135deg, #e8f5ff 0%, #b8e5ff 100%);
+            color: #7db4d9;
+            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.3);
+        }
+
+        .edit-actions button:hover {
+            transform: scale(1.08) translateY(-2px);
+        }
+
+        /* 表情选择弹窗 */
+        .emoji-picker-overlay {
+            background: linear-gradient(135deg, #ffdede 0%, #ffb6c1 30%, #ffecd2 70%, #ffeaa7 100%);
+            border-radius: 35px;
+            padding: 35px;
+            max-width: 520px;
+            width: 100%;
+            border: 5px solid #fff;
+            box-shadow: 0 25px 80px rgba(255,154,158,0.3);
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .emoji-picker-overlay h3 {
+            font-size: 1.6rem;
+            color: #ff9a9e;
+            margin-bottom: 22px;
+            text-align: center;
+            font-family: 'Fredoka One', cursive;
+            text-shadow: 2px 2px 0 rgba(255,255,255,0.5);
+        }
+
+        .emoji-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 10px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,240,245,0.6) 100%);
+            border-radius: 25px;
+            border: 3px solid rgba(255,255,255,0.8);
+        }
+
+        .emoji-picker-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .emoji-picker-grid::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+        }
+
+        .emoji-picker-grid::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            border-radius: 10px;
+        }
+
+        .emoji-picker-option {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.7rem;
+            background: rgba(255,255,255,0.9);
+            border: 3px solid #fff;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .emoji-picker-option:hover {
+            transform: scale(1.15) rotate(5deg);
+            background: #fff;
+        }
+
+        .emoji-picker-option.selected {
+            background: linear-gradient(135deg, #ffdede 0%, #ffb6c1 100%);
+            border-color: #ff9a9e;
+            transform: scale(1.1);
+        }
+
+        .emoji-picker-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .emoji-picker-actions button {
+            flex: 1;
+            padding: 15px;
+            border-radius: 25px;
+            border: 3px solid #fff;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .emoji-confirm {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255,154,158,0.3);
+        }
+
+        .emoji-cancel {
+            background: linear-gradient(135deg, #e8f5ff 0%, #b8e5ff 100%);
+            color: #7db4d9;
+            box-shadow: 0 4px 15px rgba(168, 230, 207, 0.3);
+        }
+
+        .emoji-picker-actions button:hover {
+            transform: scale(1.08) translateY(-2px);
+        }
+
+        /* 底部 */
+        .footer {
+            text-align: center;
+            margin-top: 55px;
+            color: #ff9a9e;
+            font-size: 0.95rem;
+            position: relative;
+        }
+
+        .footer::before {
+            content: '💕';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            animation: heartbeat 2s ease-in-out infinite;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: linear-gradient(135deg, rgba(255,240,245,0.4) 0%, rgba(255,218,224,0.4) 100%);
+            border-radius: 12px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #ffb6c1 100%);
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #ff8a8e 0%, #fec0cf 50%, #ffa6b1 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- 飘浮的可爱装饰 -->
+    <div class="floating-decoration float-1">🌸</div>
+    <div class="floating-decoration float-2">⭐</div>
+    <div class="floating-decoration float-3">💖</div>
+    <div class="floating-decoration float-4">🌙</div>
+    <div class="floating-decoration float-5">✨</div>
+    <div class="floating-decoration float-6">🎀</div>
+    <div class="floating-decoration float-7">☁️</div>
+    <div class="floating-decoration float-8">💕</div>
+
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>🍽️ 智能菜单</h1>
+            <p>不知道吃什么？转一转就知道了！💕</p>
+        </div>
+
+        <!-- 管理按钮 -->
+        <div class="manage-buttons">
+            <button class="manage-button" id="manageButton">⚙️ 管理菜品</button>
+            <button class="manage-button manage-categories" id="manageCategoriesButton">📂 管理分类</button>
+        </div>
+
+        <!-- 分类筛选 -->
+        <div class="category-filter" id="categoryFilter"></div>
+
+        <!-- 智能推荐提示 -->
+        <div class="smart-recommend" id="smartRecommend"></div>
+
+        <!-- 转盘 -->
+        <div class="wheel-wrapper">
+            <div class="wheel-container">
+                <div class="pointer"></div>
+                <svg class="wheel" id="wheel" viewBox="0 0 100 100"></svg>
+                <div class="center-circle" id="centerCircle">
+                    <div class="center-circle-emoji">🍽️</div>
+                    <div class="center-circle-text" id="centerCircleText"></div>
+                </div>
+            </div>
+            <button class="spin-button" id="spinButton">🎲 开始转动</button>
+        </div>
+
+        <!-- 底部 -->
+        <div class="footer">
+            <p>点击"开始转动"按钮，让转盘帮你决定今天吃什么！</p>
+            <p style="margin-top: 12px; font-size: 0.85rem;">💕 可以自定义菜品和分类，打造专属菜单哦 ~</p>
+        </div>
+    </div>
+
+    <!-- 结果弹窗 -->
+    <div class="result-overlay" id="resultOverlay">
+        <div class="result-card">
+            <div class="result-emoji" id="resultEmoji">🍜</div>
+            <div class="result-title">✨ 就是它了！ ✨</div>
+            <div class="result-name" id="resultName">麻辣烫</div>
+            <button class="reset-button" id="resetButton">
+                🔄 再转一次
+            </button>
+        </div>
+    </div>
+
+    <!-- 菜品管理弹窗 -->
+    <div class="manage-overlay" id="manageOverlay">
+        <div class="manage-card">
+            <div class="manage-header">
+                <h2>⚙️ 菜品管理</h2>
+                <button class="close-button" id="closeManage">×</button>
+            </div>
+
+            <!-- 添加菜品表单 -->
+            <div class="add-form">
+                <h3>➕ 添加新菜品</h3>
+                <div class="form-row">
+                    <input type="text" class="form-input" id="itemName" placeholder="输入菜品名称（如：宫保鸡丁）" maxlength="20">
+                </div>
+                <div class="form-row">
+                    <select class="form-select" id="itemCategory"></select>
+                </div>
+                <div style="margin-top: 12px; font-size: 0.85rem; color: #d97757;">✨ 选择一个表情：</div>
+                <div class="emoji-picker" id="emojiPicker"></div>
+                <button class="add-button" id="addButton">➕ 添加菜品</button>
+            </div>
+
+            <!-- 菜品列表 -->
+            <div class="items-section">
+                <div class="items-header">
+                    <h3>📋 所有菜品</h3>
+                    <span class="items-count" id="itemsCount">0 个菜品</span>
+                </div>
+                <div class="category-tabs" id="itemsCategoryTabs"></div>
+                <div class="items-list" id="itemsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分类管理弹窗 -->
+    <div class="manage-overlay" id="categoriesOverlay">
+        <div class="manage-card">
+            <div class="manage-header">
+                <h2>📂 分类管理</h2>
+                <button class="close-button" id="closeCategories">×</button>
+            </div>
+
+            <!-- 添加分类表单 -->
+            <div class="add-form">
+                <h3>➕ 添加新分类</h3>
+                <div class="form-row">
+                    <input type="text" class="form-input" id="newCategoryName" placeholder="分类名称（如：夜宵）" maxlength="10" style="border-color: #f9a8d4;">
+                </div>
+                <div style="margin-top: 12px; font-size: 0.85rem; color: #d97757;">✨ 选择一个表情：</div>
+                <div class="emoji-picker" id="categoryEmojiPicker" style="margin-bottom: 15px;"></div>
+                <button class="add-button" id="addCategoryButton">➕ 添加分类</button>
+            </div>
+
+            <!-- 分类列表 -->
+            <div class="category-management">
+                <h3>📋 所有分类</h3>
+                <div class="category-list" id="categoryList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <div class="edit-overlay" id="editOverlay">
+        <div class="edit-card">
+            <h3 id="editTitle">编辑</h3>
+            <input type="text" class="edit-input" id="editInput" maxlength="20">
+            <div class="edit-actions">
+                <button class="edit-cancel" id="editCancel">取消</button>
+                <button class="edit-confirm" id="editConfirm">确定 💕</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 表情选择弹窗 -->
+    <div class="edit-overlay" id="emojiPickerOverlay">
+        <div class="emoji-picker-overlay">
+            <h3 id="emojiPickerTitle">选择新图标 ✨</h3>
+            <div class="emoji-picker-grid" id="emojiPickerGrid"></div>
+            <div class="emoji-picker-actions">
+                <button class="emoji-cancel" id="emojiPickerCancel">取消</button>
+                <button class="emoji-confirm" id="emojiPickerConfirm">确定 💕</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 默认数据
+        const defaultCategories = [
+            { id: null, name: '智能推荐', emoji: '✨', isDefault: true },
+            { id: 'breakfast', name: '早餐', emoji: '🌅', isDefault: true },
+            { id: 'lunch', name: '午餐', emoji: '☀️', isDefault: true },
+            { id: 'dinner', name: '晚餐', emoji: '🌙', isDefault: true },
+            { id: 'snack', name: '小食', emoji: '🍿', isDefault: true },
+            { id: 'drink', name: '饮品', emoji: '🥤', isDefault: true }
+        ];
+
+        const defaultMenuData = {
+            breakfast: [
+                { id: 'b1', name: '豆浆油条', emoji: '🥯' },
+                { id: 'b2', name: '包子', emoji: '🥟' },
+                { id: 'b3', name: '煎饼果子', emoji: '🌯' },
+                { id: 'b4', name: '粥', emoji: '🍚' },
+                { id: 'b5', name: '鸡蛋灌饼', emoji: '🥞' },
+                { id: 'b6', name: '小笼包', emoji: '🥟' },
+                { id: 'b7', name: '豆腐脑', emoji: '🍮' },
+                { id: 'b8', name: '煎蛋', emoji: '🍳' }
+            ],
+            lunch: [
+                { id: 'l1', name: '盖浇饭', emoji: '🍛' },
+                { id: 'l2', name: '麻辣烫', emoji: '🍜' },
+                { id: 'l3', name: '黄焖鸡', emoji: '🍗' },
+                { id: 'l4', name: '汉堡', emoji: '🍔' },
+                { id: 'l5', name: '炸鸡', emoji: '🍗' },
+                { id: 'l6', name: '披萨', emoji: '🍕' },
+                { id: 'l7', name: '牛肉面', emoji: '🍜' },
+                { id: 'l8', name: '饺子', emoji: '🥟' }
+            ],
+            dinner: [
+                { id: 'd1', name: '红烧肉', emoji: '🍖' },
+                { id: 'd2', name: '鱼香肉丝', emoji: '🍽️' },
+                { id: 'd3', name: '宫保鸡丁', emoji: '🥜' },
+                { id: 'd4', name: '糖醋排骨', emoji: '🍖' },
+                { id: 'd5', name: '水煮鱼', emoji: '🐟' },
+                { id: 'd6', name: '小龙虾', emoji: '🦞' },
+                { id: 'd7', name: '烤鱼', emoji: '🐟' },
+                { id: 'd8', name: '烧烤', emoji: '🍢' }
+            ],
+            snack: [
+                { id: 's1', name: '薯条', emoji: '🍟' },
+                { id: 's2', name: '鸡块', emoji: '🍗' },
+                { id: 's3', name: '蛋糕', emoji: '🍰' },
+                { id: 's4', name: '冰淇淋', emoji: '🍦' },
+                { id: 's5', name: '奶茶', emoji: '🧋' },
+                { id: 's6', name: '炸鸡块', emoji: '🍗' },
+                { id: 's7', name: '鸭脖', emoji: '🦆' },
+                { id: 's8', name: '肉夹馍', emoji: '🥙' }
+            ],
+            drink: [
+                { id: 'dr1', name: '可乐', emoji: '🥤' },
+                { id: 'dr2', name: '咖啡', emoji: '☕' },
+                { id: 'dr3', name: '茶', emoji: '🍵' },
+                { id: 'dr4', name: '果汁', emoji: '🧃' },
+                { id: 'dr5', name: '奶茶', emoji: '🧋' },
+                { id: 'dr6', name: '酸奶', emoji: '🥛' },
+                { id: 'dr7', name: '豆浆', emoji: '🥛' },
+                { id: 'dr8', name: '柠檬水', emoji: '🍋' }
+            ]
+        };
+
+        const emojis = ['🍜', '🍛', '🍝', '🍱', '🍲', '🥘', '🍣', '🍤', '🍗', '🥩', '🍔', '🍟', '🍕', '🌭', '🥪', '🌮', '🌯', '🥙', '🧆', '🥚', '🍳', '🥘', '🍲', '🥣', '🥗', '🍿', '🧈', '🧂', '🥫', '🍱', '🍘', '🍙', '🍚', '🍛', '🍜', '🍝', '🍠', '🍢', '🍣', '🍤', '🍥', '🥮', '🍡', '🥟', '🥠', '🥡', '🦀', '🦞', '🦐', '🦑', '🦪', '🍦', '🍧', '🍨', '🍩', '🍪', '🎂', '🍰', '🧁', '🥧', '🍫', '🍬', '🍭', '🍮', '🍯', '🍼', '🥛', '☕', '🍵', '🧃', '🥤', '🍶', '🍺', '🍻', '🥂', '🍷', '🥃', '🍸', '🍹', '🧉', '🍕', '🍔', '🍟', '🥩', '🍗', '🍖', '🥞', '🥘', '🍙', '🥚', '🥠', '🥟', '🍜', '🍝', '🍣', '🍤', '🍥', '🍿', '🧈', '🥓', '🌽', '🍠', '🥔', '🍞', '🥒', '🍅', '🍆'];
+
+        // 状态
+        let categories = JSON.parse(JSON.stringify(defaultCategories));
+        let currentCategory = null;
+        let currentRotation = 0;
+        let isSpinning = false;
+        let wheelItems = [];
+        let customItems = [];
+        let deletedItemIds = [];
+        let selectedEmoji = '🍜';
+        let manageCategoryFilter = 'all';
+        let editCallback = null;
+        let emojiPickerCallback = null;
+        let selectedPickerEmoji = '🍜';
+
+        // DOM 元素
+        const categoryFilter = document.getElementById('categoryFilter');
+        const smartRecommend = document.getElementById('smartRecommend');
+        const wheel = document.getElementById('wheel');
+        const spinButton = document.getElementById('spinButton');
+        const resultOverlay = document.getElementById('resultOverlay');
+        const resultEmoji = document.getElementById('resultEmoji');
+        const resultName = document.getElementById('resultName');
+        const resetButton = document.getElementById('resetButton');
+        const manageButton = document.getElementById('manageButton');
+        const manageCategoriesButton = document.getElementById('manageCategoriesButton');
+        const manageOverlay = document.getElementById('manageOverlay');
+        const categoriesOverlay = document.getElementById('categoriesOverlay');
+        const editOverlay = document.getElementById('editOverlay');
+        const emojiPickerOverlay = document.getElementById('emojiPickerOverlay');
+        const closeManage = document.getElementById('closeManage');
+        const closeCategories = document.getElementById('closeCategories');
+        const itemName = document.getElementById('itemName');
+        const itemCategory = document.getElementById('itemCategory');
+        const emojiPicker = document.getElementById('emojiPicker');
+        const categoryEmojiPicker = document.getElementById('categoryEmojiPicker');
+        const addButton = document.getElementById('addButton');
+        const itemsCategoryTabs = document.getElementById('itemsCategoryTabs');
+        const itemsList = document.getElementById('itemsList');
+        const itemsCount = document.getElementById('itemsCount');
+        const categoryList = document.getElementById('categoryList');
+        const newCategoryName = document.getElementById('newCategoryName');
+        const addCategoryButton = document.getElementById('addCategoryButton');
+        const editTitle = document.getElementById('editTitle');
+        const editInput = document.getElementById('editInput');
+        const editConfirm = document.getElementById('editConfirm');
+        const editCancel = document.getElementById('editCancel');
+        const emojiPickerTitle = document.getElementById('emojiPickerTitle');
+        const emojiPickerGrid = document.getElementById('emojiPickerGrid');
+        const emojiPickerConfirm = document.getElementById('emojiPickerConfirm');
+        const emojiPickerCancel = document.getElementById('emojiPickerCancel');
+
+        // LocalStorage 操作
+        function saveData() {
+            localStorage.setItem('smartMenuCategories', JSON.stringify(categories));
+            localStorage.setItem('smartMenuCustomItems', JSON.stringify(customItems));
+            localStorage.setItem('smartMenuDeletedItems', JSON.stringify(deletedItemIds));
+        }
+
+        function loadData() {
+            const savedCategories = localStorage.getItem('smartMenuCategories');
+            if (savedCategories) {
+                categories = JSON.parse(savedCategories);
+            }
+
+            const savedCustom = localStorage.getItem('smartMenuCustomItems');
+            if (savedCustom) {
+                customItems = JSON.parse(savedCustom);
+            }
+
+            const savedDeleted = localStorage.getItem('smartMenuDeletedItems');
+            if (savedDeleted) {
+                deletedItemIds = JSON.parse(savedDeleted);
+            }
+        }
+
+        // 获取所有可用菜品
+        function getAllAvailableItems(category) {
+            const defaultItems = (defaultMenuData[category] || []).filter(item => !deletedItemIds.includes(item.id));
+            const categoryCustomItems = customItems.filter(item => item.category === category);
+            return [...defaultItems, ...categoryCustomItems];
+        }
+
+        // 获取所有菜品用于管理
+        function getAllItemsForManagement() {
+            let allItems = [];
+
+            Object.keys(defaultMenuData).forEach(cat => {
+                defaultMenuData[cat].forEach(item => {
+                    allItems.push({
+                        ...item,
+                        category: cat,
+                        isDefault: true,
+                        isDeleted: deletedItemIds.includes(item.id)
+                    });
+                });
+            });
+
+            customItems.forEach(item => {
+                allItems.push({
+                    ...item,
+                    isDefault: false,
+                    isDeleted: false
+                });
+            });
+
+            return allItems;
+        }
+
+        // 获取智能推荐分类
+        function getSmartRecommendCategory() {
+            const hour = new Date().getHours();
+            if (hour >= 6 && hour < 10) return 'breakfast';
+            if (hour >= 11 && hour < 14) return 'lunch';
+            if (hour >= 17 && hour < 21) return 'dinner';
+            return Math.random() > 0.5 ? 'snack' : 'drink';
+        }
+
+        // 初始化表情选择器
+        function initEmojiPicker() {
+            emojiPicker.innerHTML = '';
+            emojis.forEach((emoji) => {
+                const div = document.createElement('div');
+                div.className = 'emoji-option' + (emoji === selectedEmoji ? ' selected' : '');
+                div.textContent = emoji;
+                div.onclick = () => {
+                    selectedEmoji = emoji;
+                    document.querySelectorAll('#emojiPicker .emoji-option').forEach(el => el.classList.remove('selected'));
+                    div.classList.add('selected');
+                };
+                emojiPicker.appendChild(div);
+            });
+        }
+
+        // 初始化分类表情选择器
+        function initCategoryEmojiPicker() {
+            categoryEmojiPicker.innerHTML = '';
+            let categorySelectedEmoji = '🌙';
+            emojis.forEach((emoji) => {
+                const div = document.createElement('div');
+                div.className = 'emoji-option' + (emoji === categorySelectedEmoji ? ' selected' : '');
+                div.textContent = emoji;
+                div.onclick = () => {
+                    categorySelectedEmoji = emoji;
+                    document.querySelectorAll('#categoryEmojiPicker .emoji-option').forEach(el => el.classList.remove('selected'));
+                    div.classList.add('selected');
+                    categoryEmojiPicker.dataset.selectedEmoji = emoji;
+                };
+                categoryEmojiPicker.appendChild(div);
+            });
+            categoryEmojiPicker.dataset.selectedEmoji = categorySelectedEmoji;
+        }
+
+        // 初始化分类筛选
+        function initCategoryFilter() {
+            categoryFilter.innerHTML = '';
+            categories.forEach(cat => {
+                const button = document.createElement('button');
+                button.className = 'category-pill' + (currentCategory === cat.id ? ' active' : '');
+                button.innerHTML = `<span>${cat.emoji}</span><span>${cat.name}</span>`;
+                button.onclick = () => selectCategory(cat.id);
+                categoryFilter.appendChild(button);
+            });
+        }
+
+        // 初始化菜品分类标签
+        function initItemsCategoryTabs() {
+            itemsCategoryTabs.innerHTML = '';
+            const allTab = document.createElement('button');
+            allTab.className = 'category-tab' + (manageCategoryFilter === 'all' ? ' active' : '');
+            allTab.textContent = '📋 全部';
+            allTab.dataset.filter = 'all';
+            itemsCategoryTabs.appendChild(allTab);
+
+            categories.filter(c => c.id !== null).forEach(cat => {
+                const tab = document.createElement('button');
+                tab.className = 'category-tab' + (manageCategoryFilter === cat.id ? ' active' : '');
+                tab.textContent = `${cat.emoji} ${cat.name}`;
+                tab.dataset.filter = cat.id;
+                itemsCategoryTabs.appendChild(tab);
+            });
+        }
+
+        // 选择分类
+        function selectCategory(category) {
+            currentCategory = category;
+            initCategoryFilter();
+            updateSmartRecommend();
+            updateWheel();
+        }
+
+        // 更新智能推荐提示
+        function updateSmartRecommend() {
+            if (currentCategory === null) {
+                const cat = getSmartRecommendCategory();
+                const catInfo = categories.find(c => c.id === cat);
+                smartRecommend.innerHTML = `
+                    <div class="smart-recommend-badge">
+                        <span>✨</span>
+                        <span>智能推荐：${catInfo.name} ${catInfo.description || ''}</span>
+                    </div>
+                `;
+                smartRecommend.style.display = 'block';
+            } else {
+                smartRecommend.style.display = 'none';
+            }
+        }
+
+        // 更新分类选择下拉框
+        function updateCategorySelect() {
+            itemCategory.innerHTML = '';
+            categories.filter(c => c.id !== null).forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = `${cat.emoji} ${cat.name}`;
+                itemCategory.appendChild(option);
+            });
+        }
+
+        // 更新转盘
+        function updateWheel() {
+            const cat = currentCategory || getSmartRecommendCategory();
+            const availableItems = getAllAvailableItems(cat);
+
+            if (availableItems.length === 0) {
+                wheelItems = [];
+            } else if (availableItems.length <= 8) {
+                wheelItems = availableItems;
+            } else {
+                wheelItems = availableItems.sort(() => Math.random() - 0.5).slice(0, 8);
+            }
+            drawWheel();
+        }
+
+        // 绘制转盘
+        function drawWheel() {
+            if (wheelItems.length === 0) {
+                wheel.innerHTML = '<text x="50" y="50" text-anchor="middle" dominant-baseline="middle" font-size="6" fill="#ee5a6f" style="font-family: Nunito;">没有可选菜品 😢</text>';
+                return;
+            }
+
+            const segmentAngle = 360 / wheelItems.length;
+            const colors = ['#ffeaa7', '#ffecd2', '#dfe6e9', '#ffc6a7', '#f9a8d4', '#ffccd5', '#dcedc1', '#b8e99b'];
+
+            let svg = '';
+            wheelItems.forEach((item, index) => {
+                const startAngle = index * segmentAngle - 90;
+                const endAngle = (index + 1) * segmentAngle - 90;
+
+                const startRad = (startAngle * Math.PI) / 180;
+                const endRad = (endAngle * Math.PI) / 180;
+
+                const x1 = 50 + 50 * Math.cos(startRad);
+                const y1 = 50 + 50 * Math.sin(startRad);
+                const x2 = 50 + 50 * Math.cos(endRad);
+                const y2 = 50 + 50 * Math.sin(endRad);
+
+                const largeArcFlag = segmentAngle > 180 ? 1 : 0;
+
+                const pathData = `M 50 50 L ${x1} ${y1} A 50 50 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+
+                const textAngle = startAngle + segmentAngle / 2;
+                const textRad = (textAngle * Math.PI) / 180;
+                const textX = 50 + 35 * Math.cos(textRad);
+                const textY = 50 + 35 * Math.sin(textRad);
+
+                svg += `
+                    <g>
+                        <path d="${pathData}" fill="${colors[index % colors.length]}" stroke="#fff" stroke-width="1"/>
+                        <text x="${textX}" y="${textY}" font-size="8" font-weight="700" fill="#d97757" text-anchor="middle" dominant-baseline="middle" transform="rotate(${textAngle + 90}, ${textX}, ${textY})">
+                            ${item.emoji}
+                        </text>
+                    </g>
+                `;
+            });
+
+            wheel.innerHTML = svg;
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+        }
+
+        // 渲染菜品列表
+        function renderItemsList() {
+            const allItems = getAllItemsForManagement();
+            let filteredItems = allItems;
+
+            if (manageCategoryFilter !== 'all') {
+                filteredItems = allItems.filter(item => item.category === manageCategoryFilter);
+            }
+
+            filteredItems.sort((a, b) => {
+                if (a.isDeleted && !b.isDeleted) return 1;
+                if (!a.isDeleted && b.isDeleted) return -1;
+                return 0;
+            });
+
+            const availableCount = allItems.filter(item => !item.isDeleted).length;
+            itemsCount.textContent = `${availableCount} 个`;
+
+            if (filteredItems.length === 0) {
+                itemsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🍽️</div>
+                        <div class="empty-state-text">没有找到菜品哦 ~</div>
+                    </div>
+                `;
+                return;
+            }
+
+            itemsList.innerHTML = '';
+            filteredItems.forEach(item => {
+                const catInfo = categories.find(c => c.id === item.category);
+                const div = document.createElement('div');
+                div.className = 'item-row' + (item.isDeleted ? ' is-deleted' : '') + (!item.isDefault ? ' is-custom' : '');
+
+                if (item.isDeleted) {
+                    div.innerHTML = `
+                        <div class="item-info">
+                            <span class="item-emoji" style="opacity: 0.5;">${item.emoji}</span>
+                            <div class="item-details">
+                                <span class="item-name is-deleted">${item.name}</span>
+                                <div class="item-meta">
+                                    <span class="item-category">${catInfo ? catInfo.name : item.category}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="restore-button" onclick="restoreItem('${item.id}', '${item.isDefault ? 'default' : 'custom'}')">↻ 恢复</button>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <div class="item-info">
+                            <span class="item-emoji">${item.emoji}</span>
+                            <div class="item-details">
+                                <span class="item-name">${item.name}</span>
+                                <div class="item-meta">
+                                    <span class="item-category">${catInfo ? catInfo.name : item.category}</span>
+                                    ${!item.isDefault ? '<span class="item-badge">自定义</span>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="rename-button" onclick="changeItemEmoji('${item.id}', '${item.isDefault ? 'default' : 'custom'}')" title="换图标">🎨</button>
+                            <button class="rename-button" onclick="renameItem('${item.id}', '${item.isDefault ? 'default' : 'custom'}')" title="改名">✏️</button>
+                            <button class="delete-button" onclick="deleteItem('${item.id}', '${item.isDefault ? 'default' : 'custom'}')" title="删除">🗑️</button>
+                        </div>
+                    `;
+                }
+                itemsList.appendChild(div);
+            });
+        }
+
+        // 渲染分类列表
+        function renderCategoryList() {
+            categoryList.innerHTML = '';
+            categories.forEach(cat => {
+                const div = document.createElement('div');
+                div.className = 'category-item' + (cat.isDefault ? ' is-default' : '');
+
+                const catItemsCount = getAllAvailableItems(cat.id || 'special').length;
+
+                div.innerHTML = `
+                    <div class="category-info">
+                        <span class="category-emoji">${cat.emoji}</span>
+                        <span class="category-name">${cat.name}</span>
+                        <span class="category-badge">${catItemsCount} 个</span>
+                        ${cat.isDefault ? '<span class="category-badge">默认</span>' : '<span class="item-badge">自定义</span>'}
+                    </div>
+                    <div class="category-actions">
+                        ${cat.id !== null ? `<button class="icon-button edit" onclick="editCategory('${cat.id}', '${cat.isDefault ? 'default' : 'custom'}')" title="改名">✏️</button>` : ''}
+                        ${!cat.isDefault ? `<button class="icon-button delete" onclick="deleteCategory('${cat.id}')" title="删除">🗑️</button>` : ''}
+                    </div>
+                `;
+                categoryList.appendChild(div);
+            });
+        }
+
+        // 添加自定义菜品
+        function addCustomItem() {
+            const name = itemName.value.trim();
+            if (!name) {
+                alert('请输入菜品名称！');
+                return;
+            }
+
+            const category = itemCategory.value;
+            const newItem = {
+                id: 'custom_' + Date.now(),
+                name: name,
+                emoji: selectedEmoji,
+                category: category
+            };
+
+            customItems.push(newItem);
+            saveData();
+
+            itemName.value = '';
+            selectedEmoji = '🍜';
+            initEmojiPicker();
+
+            renderItemsList();
+            updateWheel();
+            renderCategoryList();
+            alert('✅ 添加成功！');
+        }
+
+        // 删除菜品
+        function deleteItem(id, type) {
+            if (confirm('确定要删除这个菜品吗？💕')) {
+                if (type === 'default') {
+                    if (!deletedItemIds.includes(id)) {
+                        deletedItemIds.push(id);
+                    }
+                } else {
+                    customItems = customItems.filter(item => item.id !== id);
+                }
+                saveData();
+                renderItemsList();
+                updateWheel();
+                renderCategoryList();
+            }
+        }
+
+        // 恢复菜品
+        function restoreItem(id, type) {
+            if (type === 'default') {
+                deletedItemIds = deletedItemIds.filter(itemId => itemId !== id);
+            }
+            saveData();
+            renderItemsList();
+            updateWheel();
+            renderCategoryList();
+        }
+
+        // 改名菜品
+        function renameItem(id, type) {
+            let item;
+            if (type === 'default') {
+                Object.keys(defaultMenuData).forEach(cat => {
+                    const found = defaultMenuData[cat].find(i => i.id === id);
+                    if (found) item = found;
+                });
+            } else {
+                item = customItems.find(i => i.id === id);
+            }
+
+            if (!item) return;
+
+            showEditDialog('修改菜品名称 ✏️', item.name, (newName) => {
+                if (type === 'default') {
+                    const cat = Object.keys(defaultMenuData).find(cat =>
+                        defaultMenuData[cat].some(i => i.id === id)
+                    );
+                    if (cat) {
+                        deletedItemIds.push(id);
+                        customItems.push({
+                            id: 'custom_' + Date.now(),
+                            name: newName,
+                            emoji: item.emoji,
+                            category: cat
+                        });
+                    }
+                } else {
+                    item.name = newName;
+                }
+                saveData();
+                renderItemsList();
+                updateWheel();
+            });
+        }
+
+        // 换菜品图标
+        function changeItemEmoji(id, type) {
+            let item;
+            if (type === 'default') {
+                Object.keys(defaultMenuData).forEach(cat => {
+                    const found = defaultMenuData[cat].find(i => i.id === id);
+                    if (found) item = found;
+                });
+            } else {
+                item = customItems.find(i => i.id === id);
+            }
+
+            if (!item) return;
+
+            showEmojiPicker('选择新图标 🎨', item.emoji, (newEmoji) => {
+                if (type === 'default') {
+                    const cat = Object.keys(defaultMenuData).find(cat =>
+                        defaultMenuData[cat].some(i => i.id === id)
+                    );
+                    if (cat) {
+                        deletedItemIds.push(id);
+                        customItems.push({
+                            id: 'custom_' + Date.now(),
+                            name: item.name,
+                            emoji: newEmoji,
+                            category: cat
+                        });
+                    }
+                } else {
+                    item.emoji = newEmoji;
+                }
+                saveData();
+                renderItemsList();
+                updateWheel();
+                renderCategoryList();
+            });
+        }
+
+        // 添加分类
+        function addCategory() {
+            const name = newCategoryName.value.trim();
+            const emoji = categoryEmojiPicker.dataset.selectedEmoji || '🌙';
+
+            if (!name) {
+                alert('请输入分类名称！');
+                return;
+            }
+
+            const newId = 'custom_' + Date.now();
+            categories.push({
+                id: newId,
+                name: name,
+                emoji: emoji,
+                isDefault: false
+            });
+
+            saveData();
+            newCategoryName.value = '';
+            initCategoryEmojiPicker();
+
+            initCategoryFilter();
+            initItemsCategoryTabs();
+            updateCategorySelect();
+            renderCategoryList();
+            alert('✅ 添加分类成功！');
+        }
+
+        // 删除分类
+        function deleteCategory(id) {
+            const cat = categories.find(c => c.id === id);
+            if (!cat) return;
+
+            const hasItems = customItems.some(item => item.category === id);
+            if (hasItems) {
+                alert('该分类下还有自定义菜品，请先删除这些菜品！');
+                return;
+            }
+
+            if (confirm(`确定要删除"${cat.name}"分类吗？`)) {
+                categories = categories.filter(c => c.id !== id);
+                saveData();
+                initCategoryFilter();
+                initItemsCategoryTabs();
+                updateCategorySelect();
+                renderCategoryList();
+            }
+        }
+
+        // 改名分类
+        function editCategory(id, type) {
+            const cat = categories.find(c => (c.id || 'special') === (id || 'special'));
+            if (!cat) return;
+
+            if (cat.id === null) {
+                alert('智能推荐不能改名！');
+                return;
+            }
+
+            showEditDialog('修改分类名称 ✏️', cat.name, (newName) => {
+                if (type === 'default') {
+                    const newId = 'custom_' + Date.now();
+                    categories = categories.map(c => {
+                        if (c.id === id) {
+                            return { ...c, id: newId, name: newName, isDefault: false };
+                        }
+                        return c;
+                    });
+                } else {
+                    cat.name = newName;
+                }
+                saveData();
+                initCategoryFilter();
+                initItemsCategoryTabs();
+                updateCategorySelect();
+                renderCategoryList();
+            });
+        }
+
+        // 显示编辑弹窗
+        function showEditDialog(title, initialValue, callback) {
+            editTitle.textContent = title;
+            editInput.value = initialValue;
+            editOverlay.classList.add('show');
+            editCallback = callback;
+        }
+
+        // 隐藏编辑弹窗
+        function hideEditDialog() {
+            editOverlay.classList.remove('show');
+            editCallback = null;
+        }
+
+        // 显示表情选择弹窗
+        function showEmojiPicker(title, currentEmoji, callback) {
+            emojiPickerTitle.textContent = title;
+            selectedPickerEmoji = currentEmoji;
+            emojiPickerCallback = callback;
+
+            emojiPickerGrid.innerHTML = '';
+            emojis.forEach((emoji) => {
+                const div = document.createElement('div');
+                div.className = 'emoji-picker-option' + (emoji === selectedPickerEmoji ? ' selected' : '');
+                div.textContent = emoji;
+                div.onclick = () => {
+                    selectedPickerEmoji = emoji;
+                    document.querySelectorAll('.emoji-picker-option').forEach(el => el.classList.remove('selected'));
+                    div.classList.add('selected');
+                };
+                emojiPickerGrid.appendChild(div);
+            });
+
+            emojiPickerOverlay.classList.add('show');
+        }
+
+        // 隐藏表情选择弹窗
+        function hideEmojiPicker() {
+            emojiPickerOverlay.classList.remove('show');
+            emojiPickerCallback = null;
+        }
+
+        // 转动转盘
+        function spin() {
+            if (isSpinning || wheelItems.length === 0) {
+                if (wheelItems.length === 0) {
+                    alert('当前分类没有菜品可选！请先添加菜品 ~');
+                }
+                return;
+            }
+
+            isSpinning = true;
+            spinButton.disabled = true;
+            spinButton.textContent = '转动中... 🎡';
+
+            // 重置中心圆状态
+            const centerCircle = document.getElementById('centerCircle');
+            const centerCircleText = document.getElementById('centerCircleText');
+            const centerCircleEmoji = centerCircle.querySelector('.center-circle-emoji');
+
+            centerCircleEmoji.textContent = '🍽️';
+            centerCircleText.textContent = '';
+            centerCircle.classList.remove('has-result');
+
+            const targetIndex = Math.floor(Math.random() * wheelItems.length);
+            const segmentAngle = 360 / wheelItems.length;
+            const itemCenterAngle = targetIndex * segmentAngle + segmentAngle / 2 - 90;
+            let targetRotation = 270 - itemCenterAngle;
+
+            while (targetRotation < 0) {
+                targetRotation += 360;
+            }
+
+            const extraSpins = 5 + Math.floor(Math.random() * 4);
+            const finalRotation = extraSpins * 360 + targetRotation;
+            currentRotation = currentRotation + finalRotation;
+
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                showResult(wheelItems[targetIndex]);
+                isSpinning = false;
+                spinButton.disabled = false;
+                spinButton.textContent = '🎲 开始转动';
+            }, 3000);
+        }
+
+        // 显示结果
+        function showResult(item) {
+            resultEmoji.textContent = item.emoji;
+            resultName.textContent = item.name;
+
+            // 更新中心圆显示选中菜品
+            const centerCircle = document.getElementById('centerCircle');
+            const centerCircleText = document.getElementById('centerCircleText');
+            const centerCircleEmoji = centerCircle.querySelector('.center-circle-emoji');
+
+            centerCircleEmoji.textContent = item.emoji;
+            centerCircleText.textContent = item.name;
+            centerCircle.classList.add('has-result');
+
+            resultOverlay.classList.add('show');
+        }
+
+        // 重置
+        function reset() {
+            resultOverlay.classList.remove('show');
+
+            // 恢复中心圆初始状态
+            const centerCircle = document.getElementById('centerCircle');
+            const centerCircleText = document.getElementById('centerCircleText');
+            const centerCircleEmoji = centerCircle.querySelector('.center-circle-emoji');
+
+            centerCircleEmoji.textContent = '🍽️';
+            centerCircleText.textContent = '';
+            centerCircle.classList.remove('has-result');
+        }
+
+        // 打开菜品管理
+        function openManage() {
+            manageOverlay.classList.add('show');
+            initItemsCategoryTabs();
+            renderItemsList();
+        }
+
+        // 打开分类管理
+        function openCategories() {
+            categoriesOverlay.classList.add('show');
+            renderCategoryList();
+        }
+
+        // 关闭弹窗
+        function closeManageOverlay() {
+            manageOverlay.classList.remove('show');
+        }
+
+        function closeCategoriesOverlay() {
+            categoriesOverlay.classList.remove('show');
+        }
+
+        // 事件绑定
+        spinButton.onclick = spin;
+        resetButton.onclick = reset;
+        manageButton.onclick = openManage;
+        manageCategoriesButton.onclick = openCategories;
+        closeManage.onclick = closeManageOverlay;
+        closeCategories.onclick = closeCategoriesOverlay;
+        addButton.onclick = addCustomItem;
+        addCategoryButton.onclick = addCategory;
+        editCancel.onclick = hideEditDialog;
+        editConfirm.onclick = () => {
+            const newValue = editInput.value.trim();
+            if (newValue && editCallback) {
+                editCallback(newValue);
+                hideEditDialog();
+            }
+        };
+        emojiPickerCancel.onclick = hideEmojiPicker;
+        emojiPickerConfirm.onclick = () => {
+            if (emojiPickerCallback) {
+                emojiPickerCallback(selectedPickerEmoji);
+                hideEmojiPicker();
+            }
+        };
+
+        // 分类标签切换
+        itemsCategoryTabs.addEventListener('click', (e) => {
+            if (e.target.classList.contains('category-tab')) {
+                document.querySelectorAll('#itemsCategoryTabs .category-tab').forEach(tab => tab.classList.remove('active'));
+                e.target.classList.add('active');
+                manageCategoryFilter = e.target.dataset.filter;
+                renderItemsList();
+            }
+        });
+
+        // 点击弹窗外部关闭
+        manageOverlay.onclick = (e) => {
+            if (e.target === manageOverlay) closeManageOverlay();
+        };
+        categoriesOverlay.onclick = (e) => {
+            if (e.target === categoriesOverlay) closeCategoriesOverlay();
+        };
+        editOverlay.onclick = (e) => {
+            if (e.target === editOverlay) hideEditDialog();
+        };
+        emojiPickerOverlay.onclick = (e) => {
+            if (e.target === emojiPickerOverlay) hideEmojiPicker();
+        };
+
+        // 回车添加
+        itemName.onkeypress = (e) => {
+            if (e.key === 'Enter') addCustomItem();
+        };
+        newCategoryName.onkeypress = (e) => {
+            if (e.key === 'Enter') addCategory();
+        };
+        editInput.onkeypress = (e) => {
+            if (e.key === 'Enter') editConfirm.click();
+        };
+
+        // 全局函数
+        window.deleteItem = deleteItem;
+        window.restoreItem = restoreItem;
+        window.renameItem = renameItem;
+        window.changeItemEmoji = changeItemEmoji;
+        window.editCategory = editCategory;
+        window.deleteCategory = deleteCategory;
+
+        // 初始化
+        loadData();
+        updateCategorySelect();
+        initEmojiPicker();
+        initCategoryEmojiPicker();
+        initCategoryFilter();
+        updateSmartRecommend();
+        updateWheel();
+    </script>
+</body>
+</html>
